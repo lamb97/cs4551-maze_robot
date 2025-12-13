@@ -11,3 +11,7 @@ git clone https://github.com/lamb97/cs4551-maze_robot.git
 cd ~/mazebot_ws/src 
 colcon build
 ```
+
+## World2Grid
+
+![Demo](./Images/world2grid.png)

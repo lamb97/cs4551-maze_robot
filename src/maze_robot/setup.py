@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'maze_map_publisher = maze_robot.maze_map_publisher:main'
         ],
     },
 )
