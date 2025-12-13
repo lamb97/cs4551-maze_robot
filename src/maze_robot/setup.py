@@ -32,7 +32,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'maze_map_publisher = maze_robot.maze_map_publisher:main'
+            'maze_map_publisher = maze_robot.maze_map_publisher:main',
+            'path_planner_node = maze_robot.path_planner_node:main',
         ],
     },
 )
