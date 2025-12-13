@@ -13,5 +13,12 @@ colcon build
 ```
 
 ## World2Grid
+```
+ros2 run maze_robot maze_map_publisher   --ros-args -p sdf_path:="your world path" -p resolution:=0.1
+
+#open a new terminal
+rviz2
+ 
+```
 
 ![Demo](./Images/world2grid.png)
