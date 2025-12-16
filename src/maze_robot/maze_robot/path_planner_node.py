@@ -5,7 +5,7 @@ import rclpy
 from rclpy.node import Node
 
 from nav_msgs.msg import OccupancyGrid, Path
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from std_msgs.msg import Header
 
 
@@ -70,34 +70,82 @@ class MazePlanner(Node):
             self.map_callback,
             10
         )
+        self.initialpose_sub = self.create_subscription(
+            PoseWithCovarianceStamped,
+            '/initialpose',
+            self.initialpose_callback,
+            10
+        )
+        self.goalpose_sub = self.create_subscription(
+            PoseStamped,
+            '/goal_pose',
+            self.goalpose_callback,
+            10
+        )
+
+
         self.path_pub = self.create_publisher(Path, 'planned_path', 10)
+        self.has_map = False  
         self.has_planned = False
+        self.current_map = None
+        self.map_info = None
+        self.start_pose = None
+        self.goal_pose = None
 
     def map_callback(self, msg: OccupancyGrid):
+        self.get_logger().info('Received map')
+        self.has_map = True
+        self.current_map = msg.data
+        self.map_info = msg.info
+        
+        # Plan if we have both start and goal
+        if self.start_pose and self.goal_pose:
+            self.plan_path()
+
+        
+
+    def initialpose_callback(self, msg: PoseWithCovarianceStamped):
+        self.start_pose = msg.pose.pose
+        self.get_logger().info(f'Start Pose: ({self.start_pose.position.x:.2f}, {self.start_pose.position.y:.2f})')
+        if self.has_map and self.goal_pose: 
+            self.plan_path()
+    def goalpose_callback(self, msg: PoseStamped):
+        self.goal_pose = msg.pose
+        self.get_logger().info(f'Goal Pose: ({self.goal_pose.position.x:.2f}, {self.goal_pose.position.y:.2f})')
+        if self.has_map and self.start_pose:
+            self.plan_path()
+    def plan_path(self): 
         if self.has_planned:
             return
 
         self.get_logger().info('Received map, start planning...')
 
-        width = msg.info.width
-        height = msg.info.height
-        res = msg.info.resolution
-        origin = msg.info.origin  # geometry_msgs/Pose
+        width = self.map_info.width
+        height = self.map_info.height
+        res = self.map_info.resolution
+        origin = self.map_info.origin  # geometry_msgs/Pose
 
-        graph = GridGraph(msg.data, width, height)
-        start = (1, 1)                 # row, col
-        goal = (height - 2, width - 2) # row, col
-
+        graph = GridGraph(self.current_map, width, height)
+        if self.start_pose and self.goal_pose:
+            start_col = int((self.start_pose.position.x - origin.position.x) / res)
+            start_row = int((self.start_pose.position.y - origin.position.y) / res)
+            
+            goal_col = int((self.goal_pose.position.x - origin.position.x) / res)
+            goal_row = int((self.goal_pose.position.y - origin.position.y) / res)
+            start = (start_row, start_col)
+            goal = (goal_row, goal_col)
+        else:
+            start = (1, 1)
+            goal = (height - 2, width - 2)
         path_cells = graph.shortest_path_bfs(start, goal)
         if path_cells is None:
             self.get_logger().warn('No path found from start to goal.')
             return
-
         self.get_logger().info(f'Path length (cells): {len(path_cells)}')
         path_msg = Path()
         path_msg.header = Header()
         path_msg.header.stamp = self.get_clock().now().to_msg()
-        path_msg.header.frame_id = msg.header.frame_id or 'map'
+        path_msg.header.frame_id = 'map' 
 
         for (r, c) in path_cells:
             px = origin.position.x + (c + 0.5) * res
@@ -115,7 +163,6 @@ class MazePlanner(Node):
         self.has_planned = True
         self.get_logger().info('Published planned_path.')
 
-
 def main(args=None):
     rclpy.init(args=args)
     node = MazePlanner()
@@ -126,5 +173,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
-

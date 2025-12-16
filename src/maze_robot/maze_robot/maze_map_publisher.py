@@ -119,12 +119,14 @@ class MazeMapPublisher(Node):
         super().__init__("maze_map_publisher")
         self.declare_parameter("sdf_path", "maze.world")
         self.declare_parameter("resolution", 0.1)
+        self.declare_parameter("model_name", "Maze")
 
         sdf_path = self.get_parameter("sdf_path").get_parameter_value().string_value
         res = self.get_parameter("resolution").get_parameter_value().double_value
-
+        model_name = self.get_parameter("model_name").get_parameter_value().string_value  
         self.get_logger().info(f"Loading maze from: {sdf_path}")
-        grid, origin, res = parse_maze_to_grid(sdf_path, res=res)
+        self.get_logger().info(f"Looking for model: {model_name}")
+        grid, origin, res = parse_maze_to_grid(sdf_path, model_name= model_name, res=res)
         self.grid = grid
         self.origin = origin
         self.res = res

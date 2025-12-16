@@ -41,9 +41,17 @@ def generate_launch_description():
             '-x', '0.0', '-y', '0.0', '-z', '0.1',
         ],
     )
+    static_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom'],
+        output='screen'
+    )
+
 
     return LaunchDescription([
         gz_sim,
         robot_state_publisher,
         spawn_tb3,
+        static_tf,
     ])
