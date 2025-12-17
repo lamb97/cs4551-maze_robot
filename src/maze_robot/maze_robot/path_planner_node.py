@@ -4,7 +4,7 @@ from collections import deque
 import rclpy
 from rclpy.node import Node
 
-from nav_msgs.msg import OccupancyGrid, Path
+from nav_msgs.msg import OccupancyGrid, Path, Odometry
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from std_msgs.msg import Header
 
@@ -70,6 +70,14 @@ class MazePlanner(Node):
             self.map_callback,
             10
         )
+
+        self.odom_sub = self.create_subscription(
+            Odometry,
+            '/odom',
+            self.odom_callback,
+            10
+        )
+
         self.initialpose_sub = self.create_subscription(
             PoseWithCovarianceStamped,
             '/initialpose',
@@ -90,6 +98,7 @@ class MazePlanner(Node):
         self.current_map = None
         self.map_info = None
         self.start_pose = None
+        self.robot_pose = None
         self.goal_pose = None
 
     def map_callback(self, msg: OccupancyGrid):
@@ -99,7 +108,9 @@ class MazePlanner(Node):
         self.map_info = msg.info
         
         # Plan if we have both start and goal
-        if self.start_pose and self.goal_pose:
+        # if self.start_pose and self.goal_pose:
+        #     self.plan_path()
+        if self.robot_pose and self.goal_pose and not self.has_planned:
             self.plan_path()
 
         
@@ -112,8 +123,19 @@ class MazePlanner(Node):
     def goalpose_callback(self, msg: PoseStamped):
         self.goal_pose = msg.pose
         self.get_logger().info(f'Goal Pose: ({self.goal_pose.position.x:.2f}, {self.goal_pose.position.y:.2f})')
-        if self.has_map and self.start_pose:
+        # if self.has_map and self.start_pose:
+        #     self.plan_path()
+        if self.has_map and self.robot_pose and not self.has_planned:
             self.plan_path()
+
+    def odom_callback(self, msg: Odometry):
+        self.robot_pose = msg.pose.pose
+        self.get_logger().debug(
+            f"Robot pose from odom: ({self.robot_pose.position.x:.2f}, {self.robot_pose.position.y:.2f})"
+        )
+        if self.has_map and self.goal_pose and not self.has_planned:
+            self.plan_path()
+            
     def plan_path(self): 
         if self.has_planned:
             return
@@ -126,10 +148,10 @@ class MazePlanner(Node):
         origin = self.map_info.origin  # geometry_msgs/Pose
 
         graph = GridGraph(self.current_map, width, height)
-        if self.start_pose and self.goal_pose:
-            start_col = int((self.start_pose.position.x - origin.position.x) / res)
-            start_row = int((self.start_pose.position.y - origin.position.y) / res)
-            
+        if self.robot_pose and self.goal_pose:
+            start_col = int((self.robot_pose.position.x - origin.position.x) / res)
+            start_row = int((self.robot_pose.position.y - origin.position.y) / res)
+
             goal_col = int((self.goal_pose.position.x - origin.position.x) / res)
             goal_row = int((self.goal_pose.position.y - origin.position.y) / res)
             start = (start_row, start_col)
