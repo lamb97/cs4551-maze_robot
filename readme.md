@@ -19,8 +19,10 @@ source ~/mazebot_ws/install/setup.bash
 ## Maze_robot
 ```
 ros2 run maze_robot grid_graph_visualizer -- --map-display raw
+
+# open a new terminal
 ros2 launch maze_robot maze_navigation.launch.py
  
 ```
 
-![Demo](./Images/world2grid.png)
+![Demo](./Images/visualize.png)

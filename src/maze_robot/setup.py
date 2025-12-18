@@ -30,8 +30,7 @@ setup(
         ]),
 
         ('share/' + package_name + '/worlds', [
-            'worlds/maze.world',
-            'worlds/maze2.world'
+            'worlds/maze.world'
         ]),
         ('share/' + package_name + '/config', [
             'config/tb3_bridge.yaml',

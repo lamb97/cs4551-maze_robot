@@ -38,8 +38,7 @@ class GridGraph:
     def is_free(self, r: int, c: int) -> bool:
         v = self.grid[r * self.width + c]
         return v == 0
-
-     def neighbors(self, r, c):
+    def neighbors(self, r, c):
 
         directions = [
             (1, 0),
