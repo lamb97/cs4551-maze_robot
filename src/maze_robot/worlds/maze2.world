@@ -231,7 +231,7 @@
           <wrench>0 0 0 0 -0 0</wrench>
         </link>
       </model>
-      <model name='maze_2'>
+      <model name='Maze'>
         <pose>3.19542 4.92683 0 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='Wall_12'>
@@ -449,7 +449,7 @@
       </camera>
     </gui>
     
-    <model name='maze_2'>
+    <model name='Maze'>
       <pose>3.19542 4.92683 0 0 -0 0</pose>
       <link name='Wall_12'>
         <collision name='Wall_12_Collision'>
