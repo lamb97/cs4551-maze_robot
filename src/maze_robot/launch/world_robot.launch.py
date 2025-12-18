@@ -10,7 +10,7 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     maze_robot_share = get_package_share_directory('maze_robot')
-    world_path = os.path.join(maze_robot_share, 'worlds', 'maze.world')
+    world_path = os.path.join(maze_robot_share, 'worlds', 'maze2.world')
     local_models = os.path.join(maze_robot_share, 'models')
 
     demos_share = get_package_share_directory('ros_gz_sim_demos')

@@ -117,7 +117,7 @@ def parse_maze_to_grid(sdf_path, model_name="Maze", res=0.1, margin=0.2):
 class MazeMapPublisher(Node):
     def __init__(self):
         super().__init__("maze_map_publisher")
-        self.declare_parameter("sdf_path", "maze.world")
+        self.declare_parameter("sdf_path", "maze2.world")
         self.declare_parameter("resolution", 0.1)
         self.declare_parameter("model_name", "Maze")
 
