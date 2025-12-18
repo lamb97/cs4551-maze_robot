@@ -70,6 +70,7 @@ class MazePlanner(Node):
             self.map_callback,
             10
         )
+        self.safe_margin = 0.25  # meters to keep from walls
 
         odom_topic = self.declare_parameter(
             'odom_topic',
@@ -101,8 +102,16 @@ class MazePlanner(Node):
     def map_callback(self, msg: OccupancyGrid):
         self.get_logger().info('Received map')
         self.has_map = True
-        self.current_map = msg.data
         self.map_info = msg.info
+        raw_map = list(msg.data)
+        radius_cells = max(1, int(math.ceil(self.safe_margin / self.map_info.resolution)))
+        inflated = self.inflate_map(
+            raw_map,
+            self.map_info.width,
+            self.map_info.height,
+            radius_cells,
+        )
+        self.current_map = inflated
         
         if self.robot_pose and self.goal_pose and not self.has_planned:
             self.plan_path()
@@ -171,6 +180,20 @@ class MazePlanner(Node):
         self.path_pub.publish(path_msg)
         self.has_planned = True
         self.get_logger().info('Published planned_path.')
+
+    @staticmethod
+    def inflate_map(data, width, height, radius):
+        inflated = data[:]
+        for r in range(height):
+            for c in range(width):
+                if data[r * width + c] != 0:
+                    for dr in range(-radius, radius + 1):
+                        for dc in range(-radius, radius + 1):
+                            rr = r + dr
+                            cc = c + dc
+                            if 0 <= rr < height and 0 <= cc < width:
+                                inflated[rr * width + cc] = 100
+        return inflated
 
 def main(args=None):
     rclpy.init(args=args)
