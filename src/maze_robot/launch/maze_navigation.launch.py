@@ -21,7 +21,7 @@ def generate_launch_description():
         package='maze_robot',
         executable='maze_map_publisher',
         parameters=[{
-            'sdf_path': os.path.join(maze_share, 'worlds', 'maze.world'),
+            'sdf_path': os.path.join(maze_share, 'worlds', 'maze2.world'),
             'model_name': 'Maze',
             'resolution': 0.1,
         }],

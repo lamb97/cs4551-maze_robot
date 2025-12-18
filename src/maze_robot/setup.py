@@ -31,7 +31,11 @@ setup(
 
         ('share/' + package_name + '/worlds', [
             'worlds/maze.world',
+<<<<<<< Updated upstream
             'worlds/maze2.world'
+=======
+            'worlds/maze2.world',
+>>>>>>> Stashed changes
         ]),
         ('share/' + package_name + '/config', [
             'config/tb3_bridge.yaml',
