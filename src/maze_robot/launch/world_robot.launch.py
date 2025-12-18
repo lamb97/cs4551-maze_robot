@@ -4,21 +4,14 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, SetEnvironmentVariable
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.actions import ExecuteProcess, SetEnvironmentVariable
+from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     maze_robot_share = get_package_share_directory('maze_robot')
-    maze_world_arg = DeclareLaunchArgument(
-        'maze_world',
-        default_value='maze2.world',
-        choices=['maze.world', 'maze2.world'],
-        description='Which world file to load from the package `worlds/` directory.',
-    )
-    maze_world = LaunchConfiguration('maze_world')
-    world_path = PathJoinSubstitution([maze_robot_share, 'worlds', maze_world])
+    world_path = PathJoinSubstitution([maze_robot_share, 'worlds', 'maze.world'])
     local_models = os.path.join(maze_robot_share, 'models')
 
     demos_share = get_package_share_directory('ros_gz_sim_demos')
@@ -84,7 +77,6 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        maze_world_arg,
         set_gz_resource,
         gz_sim,
         state_publisher,

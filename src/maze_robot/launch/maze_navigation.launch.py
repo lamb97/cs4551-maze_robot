@@ -4,31 +4,21 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
 
 def generate_launch_description():
     maze_share = get_package_share_directory('maze_robot')
-    maze_world_arg = DeclareLaunchArgument(
-        'maze_world',
-        default_value='maze2.world',
-        choices=['maze.world', 'maze2.world'],
-        description='Which world file to load from the package `worlds/` directory.',
-    )
-    maze_world = LaunchConfiguration('maze_world')
-    world_path = PathJoinSubstitution([maze_share, 'worlds', maze_world])
+    world_path = PathJoinSubstitution([maze_share, 'worlds', 'maze.world'])
 
     world_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(maze_share, 'launch', 'world_robot.launch.py')
-        ),
-        launch_arguments={
-            'maze_world': maze_world,
-        }.items(),
+        )
     )
 
     map_node = Node(
@@ -61,7 +51,6 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
-        maze_world_arg,
         world_launch,
         map_node,
         planner,

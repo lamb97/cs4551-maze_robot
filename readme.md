@@ -16,21 +16,10 @@ source ~/mazebot_ws/install/setup.bash
 
 ```
 
-## World2Grid
+## Maze_robot
 ```
-# Terminal 1
-# Default (maze2.world)
+ros2 run maze_robot grid_graph_visualizer -- --map-display raw
 ros2 launch maze_robot maze_navigation.launch.py
-
-# Choose maze.world
-ros2 launch maze_robot maze_navigation.launch.py maze_world:=maze.world
-
-# Choose maze2.world
-ros2 launch maze_robot maze_navigation.launch.py maze_world:=maze2.world
-
-#Terminal 2 
-#open a new terminal
-rviz2
  
 ```
 

@@ -23,12 +23,31 @@ class GridGraph:
         return v == 0 
 
     def neighbors(self, r, c):
-        # 4-connected
-        # for dr, dc in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-        for dr, dc in [(1,0),(-1,0),(0,1),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1)]:
+
+        directions = [
+            (1, 0),
+            (-1, 0),
+            (0, 1),
+            (0, -1),
+            (1, 1),
+            (1, -1),
+            (-1, 1),
+            (-1, -1),
+        ]
+        for dr, dc in directions:
             rr, cc = r + dr, c + dc
-            if self.in_bounds(rr, cc) and self.is_free(rr, cc):
-                yield (rr, cc)
+            if not self.in_bounds(rr, cc):
+                continue
+            if not self.is_free(rr, cc):
+                continue
+
+            if dr != 0 and dc != 0:
+                if not (self.in_bounds(r, cc) and self.is_free(r, cc)):
+                    continue
+                if not (self.in_bounds(rr, c) and self.is_free(rr, c)):
+                    continue
+
+            yield (rr, cc)
 
     def shortest_path_bfs(self, start, goal):
         sr, sc = start
@@ -187,13 +206,14 @@ class MazePlanner(Node):
         inflated = data[:]
         for r in range(height):
             for c in range(width):
-                if data[r * width + c] != 0:
+                if data[r * width + c] >= 50:
                     for dr in range(-radius, radius + 1):
                         for dc in range(-radius, radius + 1):
                             rr = r + dr
                             cc = c + dc
                             if 0 <= rr < height and 0 <= cc < width:
-                                inflated[rr * width + cc] >= 100 
+                                idx = rr * width + cc
+                                inflated[idx] = max(inflated[idx], 100)
         return inflated
 
 def main(args=None):

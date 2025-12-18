@@ -1,18 +1,4 @@
 #!/usr/bin/env python3
-"""GridGraph BFS 可视化脚本.
-
-功能：
-- 订阅 `maze_map`(nav_msgs/OccupancyGrid) 并绘制栅格地图
-- 订阅 `planned_path`(nav_msgs/Path) 并叠加路径（推荐：直接可视化 path_planner_node 的结果）
-- 可选：根据 `/odom` 与 `/goal_pose` 自己运行 GridGraph(BFS) 计算路径并绘制
-
-用法：
-1) ROS2 模式（推荐）
-   `ros2 run maze_robot grid_graph_visualizer`
-
-2) 离线 demo（不需要 ROS2）
-   `python3 -m maze_robot.grid_graph_visualizer --demo`
-"""
 
 from __future__ import annotations
 
@@ -40,7 +26,6 @@ Coord = Tuple[int, int]  # (row, col)
 
 
 class GridGraph:
-    """与 `path_planner_node.py` 里的 GridGraph 行为保持一致."""
 
     def __init__(self, grid: Sequence[int], width: int, height: int):
         self.width = width
@@ -54,9 +39,9 @@ class GridGraph:
         v = self.grid[r * self.width + c]
         return v == 0
 
-    def neighbors(self, r: int, c: int) -> Iterable[Coord]:
-        # 8-connected（与你当前 path_planner_node.py 一致）
-        for dr, dc in [
+     def neighbors(self, r, c):
+
+        directions = [
             (1, 0),
             (-1, 0),
             (0, 1),
@@ -65,10 +50,21 @@ class GridGraph:
             (1, -1),
             (-1, 1),
             (-1, -1),
-        ]:
+        ]
+        for dr, dc in directions:
             rr, cc = r + dr, c + dc
-            if self.in_bounds(rr, cc) and self.is_free(rr, cc):
-                yield (rr, cc)
+            if not self.in_bounds(rr, cc):
+                continue
+            if not self.is_free(rr, cc):
+                continue
+
+            if dr != 0 and dc != 0:
+                if not (self.in_bounds(r, cc) and self.is_free(r, cc)):
+                    continue
+                if not (self.in_bounds(rr, c) and self.is_free(rr, c)):
+                    continue
+
+            yield (rr, cc)
 
     def shortest_path_bfs(self, start: Coord, goal: Coord) -> Optional[List[Coord]]:
         sr, sc = start
@@ -102,31 +98,22 @@ class GridGraph:
         return path
 
 
-def inflate_map(
-    data: Sequence[int],
-    width: int,
-    height: int,
-    radius: int,
-) -> List[int]:
-    """简单障碍膨胀：把障碍周围 radius 个格子都当成障碍."""
-    inflated = list(data)
-    if radius <= 0:
+def inflate_map(data, width, height, radius):
+        inflated = data[:]
+        for r in range(height):
+            for c in range(width):
+                if data[r * width + c] >= 50:
+                    for dr in range(-radius, radius + 1):
+                        for dc in range(-radius, radius + 1):
+                            rr = r + dr
+                            cc = c + dc
+                            if 0 <= rr < height and 0 <= cc < width:
+                                idx = rr * width + cc
+                                inflated[idx] = max(inflated[idx], 100)
         return inflated
-
-    for r in range(height):
-        for c in range(width):
-            if data[r * width + c] != 0:
-                for dr in range(-radius, radius + 1):
-                    for dc in range(-radius, radius + 1):
-                        rr = r + dr
-                        cc = c + dc
-                        if 0 <= rr < height and 0 <= cc < width:
-                            inflated[rr * width + cc] = 100
-    return inflated
 
 
 def _grid_to_img(grid: Sequence[int], width: int, height: int):
-    """把 OccupancyGrid 的 data 转成 imshow 可用的 2D 数据."""
     if np is not None:
         arr = np.asarray(list(grid), dtype=np.int16).reshape((height, width))
         img = np.ones((height, width), dtype=np.float32)
@@ -189,9 +176,6 @@ def _build_demo_grid(width: int, height: int) -> List[int]:
 
 def run_demo(args) -> int:
     plt = _try_import_matplotlib()
-    if plt is None:
-        print('demo 模式需要 matplotlib（pip install matplotlib）')
-        return 1
 
     width = int(args.demo_width)
     height = int(args.demo_height)
@@ -201,7 +185,7 @@ def run_demo(args) -> int:
     goal = (height - 2, width - 2)
     path = graph.shortest_path_bfs(start, goal)
     if path is None:
-        print('demo：没有找到路径')
+        print('demo: no path')
         return 0
 
     img = _grid_to_img(grid, width, height)
@@ -216,7 +200,6 @@ def run_demo(args) -> int:
 
 
 class GridGraphVisualizerNode:
-    """订阅地图/路径并绘制到 matplotlib 窗口."""
 
     def __init__(self, args):
         import rclpy  # lazy import
@@ -261,8 +244,7 @@ class GridGraphVisualizerNode:
         self.node.create_subscription(PoseStamped, self.goal_topic, self._on_goal, 10)
 
         plt = _try_import_matplotlib()
-        if plt is None:
-            raise RuntimeError('需要安装 matplotlib 才能可视化：pip install matplotlib')
+
 
         self._plt = plt
         self._fig, self._ax = plt.subplots()
@@ -415,28 +397,28 @@ class GridGraphVisualizerNode:
 
 
 def _parse_args(argv: Optional[Sequence[str]] = None):
-    parser = argparse.ArgumentParser(description='GridGraph 可视化工具')
+    parser = argparse.ArgumentParser(description='GridGraph visualization tool')
 
-    parser.add_argument('--demo', action='store_true', help='离线 demo（不需要 ROS2）')
-    parser.add_argument('--demo-width', type=int, default=40, help='demo 地图宽度')
-    parser.add_argument('--demo-height', type=int, default=25, help='demo 地图高度')
+    parser.add_argument('--demo', action='store_true', help='Offline demo (does not require ROS2)')
+    parser.add_argument('--demo-width', type=int, default=40, help='Demo map width')
+    parser.add_argument('--demo-height', type=int, default=25, help='Demo map height')
 
-    parser.add_argument('--map-topic', default='maze_map', help='OccupancyGrid 话题名')
-    parser.add_argument('--path-topic', default='planned_path', help='Path 话题名')
-    parser.add_argument('--odom-topic', default='/odom', help='Odometry 话题名')
-    parser.add_argument('--goal-topic', default='/goal_pose', help='Goal Pose 话题名')
+    parser.add_argument('--map-topic', default='maze_map', help='OccupancyGrid topic name')
+    parser.add_argument('--path-topic', default='planned_path', help='Path topic name')
+    parser.add_argument('--odom-topic', default='/odom', help='Odometry topic name')
+    parser.add_argument('--goal-topic', default='/goal_pose', help='Goal Pose topic name')
 
     parser.add_argument(
         '--compute-bfs',
         action='store_true',
-        help='不依赖 planned_path，自己用 GridGraph(BFS) 计算一条路径并绘制',
+        help='Do not rely on planned_path; compute a path yourself using GridGraph (BFS) and draw it',
     )
-    parser.add_argument('--safe-margin', type=float, default=0.25, help='障碍膨胀半径（米）')
+    parser.add_argument('--safe-margin', type=float, default=0.25, help='Obstacle inflation radius (meters)')
     parser.add_argument(
         '--recompute-min-period',
         type=float,
         default=0.2,
-        help='最小重算周期（秒），避免频繁 BFS',
+        help='Minimum recomputation period (seconds) to avoid running BFS too frequently',
     )
 
     return parser.parse_args(argv)
