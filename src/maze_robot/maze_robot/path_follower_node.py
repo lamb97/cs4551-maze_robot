@@ -100,10 +100,10 @@ class SimplePathFollower(Node):
         cmd = Twist()
         cmd.angular.z = max(-self.max_ang, min(self.max_ang, curvature * self.max_lin))
 
-        if abs(ly) > 0.3 * lookahead_dist or abs(cmd.angular.z) > 0.5:
+        if abs(ly) > 0.35 * lookahead_dist or abs(cmd.angular.z) > 0.45:
             cmd.linear.x = 0.0
         else:
-            cmd.linear.x = min(self.max_lin, lookahead_dist)
+            cmd.linear.x = min(self.max_lin, lookahead_dist) * 0.8
 
         self.cmd_pub.publish(cmd)
 

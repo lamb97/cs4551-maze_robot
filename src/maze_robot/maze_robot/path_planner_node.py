@@ -24,7 +24,8 @@ class GridGraph:
 
     def neighbors(self, r, c):
         # 4-connected
-        for dr, dc in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+        # for dr, dc in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+        for dr, dc in [(1,0),(-1,0),(0,1),(0,-1),(1,1),(1,-1),(-1,1),(-1,-1)]:
             rr, cc = r + dr, c + dc
             if self.in_bounds(rr, cc) and self.is_free(rr, cc):
                 yield (rr, cc)
@@ -192,7 +193,11 @@ class MazePlanner(Node):
                             rr = r + dr
                             cc = c + dc
                             if 0 <= rr < height and 0 <= cc < width:
+<<<<<<< HEAD
                                 inflated[rr * width + cc] = 50
+=======
+                                inflated[rr * width + cc] >= 100
+>>>>>>> cb5a2361f2081ee4f9de5db2b20f69b0d3f4655c
         return inflated
 
 def main(args=None):
