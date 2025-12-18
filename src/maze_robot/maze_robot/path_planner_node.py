@@ -5,7 +5,7 @@ import rclpy
 from rclpy.node import Node
 
 from nav_msgs.msg import OccupancyGrid, Path, Odometry
-from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseStamped
 from std_msgs.msg import Header
 
 
@@ -71,19 +71,17 @@ class MazePlanner(Node):
             10
         )
 
+        odom_topic = self.declare_parameter(
+            'odom_topic',
+            '/odom'
+        ).value
         self.odom_sub = self.create_subscription(
             Odometry,
-            '/odom',
+            odom_topic,
             self.odom_callback,
             10
         )
 
-        self.initialpose_sub = self.create_subscription(
-            PoseWithCovarianceStamped,
-            '/initialpose',
-            self.initialpose_callback,
-            10
-        )
         self.goalpose_sub = self.create_subscription(
             PoseStamped,
             '/goal_pose',
@@ -97,7 +95,6 @@ class MazePlanner(Node):
         self.has_planned = False
         self.current_map = None
         self.map_info = None
-        self.start_pose = None
         self.robot_pose = None
         self.goal_pose = None
 
@@ -107,33 +104,23 @@ class MazePlanner(Node):
         self.current_map = msg.data
         self.map_info = msg.info
         
-        # Plan if we have both start and goal
-        # if self.start_pose and self.goal_pose:
-        #     self.plan_path()
         if self.robot_pose and self.goal_pose and not self.has_planned:
             self.plan_path()
 
         
 
-    def initialpose_callback(self, msg: PoseWithCovarianceStamped):
-        self.start_pose = msg.pose.pose
-        self.get_logger().info(f'Start Pose: ({self.start_pose.position.x:.2f}, {self.start_pose.position.y:.2f})')
-        if self.has_map and self.goal_pose: 
-            self.plan_path()
     def goalpose_callback(self, msg: PoseStamped):
         self.goal_pose = msg.pose
         self.get_logger().info(f'Goal Pose: ({self.goal_pose.position.x:.2f}, {self.goal_pose.position.y:.2f})')
-        # if self.has_map and self.start_pose:
-        #     self.plan_path()
         if self.has_map and self.robot_pose and not self.has_planned:
             self.plan_path()
 
     def odom_callback(self, msg: Odometry):
         self.robot_pose = msg.pose.pose
-        self.get_logger().debug(
-            f"Robot pose from odom: ({self.robot_pose.position.x:.2f}, {self.robot_pose.position.y:.2f})"
-        )
         if self.has_map and self.goal_pose and not self.has_planned:
+            self.get_logger().info(
+                f"Robot pose from odom: ({self.robot_pose.position.x:.2f}, {self.robot_pose.position.y:.2f})"
+            )
             self.plan_path()
             
     def plan_path(self): 

@@ -18,6 +18,11 @@
         <falloff>0</falloff>
       </spot>
     </light>
+    <include>
+      <uri>model://turtlebot3_burger</uri>
+      <name>turtlebot3_burger</name>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
     <model name='ground_plane'>
       <static>1</static>
       <link name='link'>
