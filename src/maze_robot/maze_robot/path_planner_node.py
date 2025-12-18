@@ -193,7 +193,7 @@ class MazePlanner(Node):
                             rr = r + dr
                             cc = c + dc
                             if 0 <= rr < height and 0 <= cc < width:
-                                inflated[rr * width + cc] = 100
+                                inflated[rr * width + cc] >= 100 
         return inflated
 
 def main(args=None):

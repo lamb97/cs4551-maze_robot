@@ -55,6 +55,7 @@ setup(
             'path_planner_node = maze_robot.path_planner_node:main',
             'path_follower_node = maze_robot.path_follower_node:main',
             'odom_tf_broadcaster = maze_robot.odom_tf_broadcaster:main',
+            'grid_graph_visualizer = maze_robot.grid_graph_visualizer:main',
         ],
     },
 )
