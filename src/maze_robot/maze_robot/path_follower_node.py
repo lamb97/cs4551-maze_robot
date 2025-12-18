@@ -34,14 +34,15 @@ class SimplePathFollower(Node):
         )
         self.cmd_pub = self.create_publisher(Twist, '/cmd_vel', 10)
 
-        self.path_points = []  
-        self.idx = 0    
+        self.path_points = []
+        self.idx = 0
         self.has_odom = False
 
-        self.dist_tol = 0.08      
-        self.goal_tol = 0.10      
-        self.max_lin = 0.18
-        self.max_ang = 1.0
+        self.dist_tol = 0.08
+        self.goal_tol = 0.12
+        self.max_lin = 0.12
+        self.max_ang = 0.8
+        self.lookahead = 0.35
 
         self.x = 0.0
         self.y = 0.0
@@ -72,41 +73,83 @@ class SimplePathFollower(Node):
             self.publish_stop()
             return
 
-        tx, ty = self.path_points[self.idx]
-        dx = tx - self.x
-        dy = ty - self.y
-        dist = math.hypot(dx, dy)
+        current_target = self._advance_index()
+        dist_to_target = math.hypot(
+            current_target[0] - self.x,
+            current_target[1] - self.y
+        )
 
-        if dist < self.dist_tol and self.idx < len(self.path_points) - 1:
-            self.idx += 1
-            tx, ty = self.path_points[self.idx]
-            dx = tx - self.x
-            dy = ty - self.y
-            dist = math.hypot(dx, dy)
-
-        if self.idx == len(self.path_points) - 1 and dist < self.goal_tol:
+        if self.idx == len(self.path_points) - 1 and dist_to_target < self.goal_tol:
             self.get_logger().info("Reached goal, stopping.")
             self.path_points = []
             self.publish_stop()
             return
 
-        target_yaw = math.atan2(dy, dx)
-        yaw_err = normalize_angle(target_yaw - self.yaw)
+        target_point = self._lookahead_point()
+        lx, ly, lookahead_dist = self._transform_to_base(target_point)
+        if lookahead_dist < 1e-3:
+            self.publish_stop()
+            return
 
+        if lx <= 0.0 and self.idx < len(self.path_points) - 1:
+            # advance further until point is in front
+            self.idx += 1
+            return
+
+        curvature = 2.0 * ly / (lookahead_dist ** 2)
         cmd = Twist()
+        cmd.angular.z = max(-self.max_ang, min(self.max_ang, curvature * self.max_lin))
 
-        angle_threshold = 0.3  # rad
-        if abs(yaw_err) > angle_threshold:
+        if abs(ly) > 0.3 * lookahead_dist or abs(cmd.angular.z) > 0.5:
             cmd.linear.x = 0.0
-            cmd.angular.z = max(-self.max_ang, min(self.max_ang, 1.5 * yaw_err))
         else:
-            cmd.linear.x = min(self.max_lin, 0.6 * dist)
-            cmd.angular.z = max(-self.max_ang, min(self.max_ang, 1.0 * yaw_err))
+            cmd.linear.x = min(self.max_lin, lookahead_dist)
 
         self.cmd_pub.publish(cmd)
 
     def publish_stop(self):
         self.cmd_pub.publish(Twist())
+
+    def _advance_index(self):
+        while self.idx < len(self.path_points) - 1:
+            px, py = self.path_points[self.idx]
+            if math.hypot(px - self.x, py - self.y) < self.dist_tol:
+                self.idx += 1
+                continue
+            if not self._is_point_in_front((px, py)):
+                self.idx += 1
+            else:
+                break
+        return self.path_points[self.idx]
+
+    def _lookahead_point(self):
+        if not self.path_points:
+            return (self.x, self.y)
+        target_idx = self.idx
+        chosen = self.path_points[self.idx]
+        while target_idx < len(self.path_points):
+            px, py = self.path_points[target_idx]
+            dist = math.hypot(px - self.x, py - self.y)
+            if dist >= self.lookahead and self._is_point_in_front((px, py)):
+                chosen = (px, py)
+                break
+            target_idx += 1
+        else:
+            chosen = self.path_points[-1]
+        return chosen
+
+    def _transform_to_base(self, point):
+        dx = point[0] - self.x
+        dy = point[1] - self.y
+        sin_yaw = math.sin(self.yaw)
+        cos_yaw = math.cos(self.yaw)
+        lx = cos_yaw * dx + sin_yaw * dy
+        ly = -sin_yaw * dx + cos_yaw * dy
+        return lx, ly, math.hypot(lx, ly)
+
+    def _is_point_in_front(self, point):
+        lx, _, _ = self._transform_to_base(point)
+        return lx > 0.05
 
 
 def main(args=None):

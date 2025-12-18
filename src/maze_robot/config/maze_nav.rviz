@@ -1,0 +1,78 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Selection
+    Name: Selection
+  - Class: rviz_common/Tool Properties
+    Expanded:
+      - /2D Goal Pose1
+    Name: Tool Properties
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.7
+      Cell Size: 1
+      Class: rviz_default_plugins/Grid
+      Color: 160; 160; 160
+      Enabled: true
+      Name: Grid
+      Plane: XY
+      Reference Frame: map
+    - Alpha: 0.5
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Enabled: true
+      Name: Map
+      Topic: /maze_map
+      Use Timestamp: false
+    - Class: rviz_default_plugins/Path
+      Color: 25; 255; 0
+      Enabled: true
+      Name: PlannedPath
+      Topic: /planned_path
+      Buffer Length: 1
+      Line Style: Billboards
+      Line Width: 0.05
+    - Class: rviz_default_plugins/Odometry
+      Enabled: true
+      Name: Odometry
+      Topic: /odom
+      Shape: Arrow
+      Axes Length: 0.3
+      Axes Radius: 0.02
+      Position Tolerance: 0.1
+      Angle Tolerance: 0.1
+      Queue Size: 100
+    - Class: rviz_default_plugins/TF
+      Enabled: true
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: false
+    - Class: rviz_default_plugins/RobotModel
+      Enabled: true
+      Name: RobotModel
+      Description Topic: /robot_description
+  Global Options:
+    Fixed Frame: map
+  Tools:
+    - Class: rviz_default_plugins/tools/Interact
+    - Class: rviz_default_plugins/tools/MoveCamera
+    - Class: rviz_default_plugins/tools/Select
+    - Class: rviz_default_plugins/tools/Measure
+    - Class: rviz_default_plugins/tools/SetInitialPose
+      Topic: /initialpose
+    - Class: rviz_default_plugins/tools/SetGoal
+      Topic: /goal_pose
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 15
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Pitch: 0.7
+      Yaw: 0.5

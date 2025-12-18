@@ -26,6 +26,7 @@ setup(
 
         ('share/' + package_name + '/launch', [
             'launch/world_robot.launch.py',
+            'launch/maze_navigation.launch.py',
         ]),
 
         ('share/' + package_name + '/worlds', [
@@ -33,6 +34,7 @@ setup(
         ]),
         ('share/' + package_name + '/config', [
             'config/tb3_bridge.yaml',
+            'config/maze_nav.rviz',
         ]),
     ] + model_data_files,
     install_requires=['setuptools'],
