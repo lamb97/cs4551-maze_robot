@@ -12,24 +12,8 @@ cd src
 git clone https://github.com/lamb97/cs4551-maze_robot.git
 cd ..
 colcon build
-<<<<<<< HEAD
 source ~/mazebot_ws/install/setup.bash
-=======
-source install/setup.bash
-```
-## Mazesolve
-```
-#Terminal 1
-ros2 run maze_robot maze_map_publisher --ros-args   -p sdf_path:="your world path"   -p resolution:=0.1   -p model_name:="Maze or maze_2"
-#Terminal 2
-ros2 launch maze_robot world_turtlebot3.launch.py
-#Terminal 3 
-ros2 run maze_robot path_planner_node
-#Terminal 4 
-#open a new terminal
-rviz2
- 
->>>>>>> cb5a2361f2081ee4f9de5db2b20f69b0d3f4655c
+
 ```
 
 ## World2Grid
